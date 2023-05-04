@@ -2,19 +2,58 @@
 
 import os
 
+
 try:
     import numpy as np
 except ImportError as e:
     os.system("sudo pip3 install numpy")
     import numpy as np
 
-def ridge(data):
-    pass
-    
+
+def ridge(xArr, yArr):
+    def ridgeTest(xMat, yMat, lam=0.2):
+        xTx = xMat.T * xMat
+        denom = xTx + np.eye(np.shape(xMat)[1]) * lam
+        if np.linalg.det(denom) == 0.0:
+            #print("This matrix is singular, cannot do inverse")
+            return
+        ws = denom.I * (xMat.T * yMat)
+        return ws
+
+    xMat = np.mat(xArr);
+    yMat = np.mat(yArr).T
+    yMean = np.mean(yMat)  # 数据标准化
+    # print(yMean)
+    yMat = yMat - yMean
+    # print(xMat)
+    # regularize X's
+    xMeans = np.mean(xMat, 0)
+    xVar = np.var(xMat, 0)
+    xMat = (xMat - xMeans) / xVar  # （特征-均值）/方差
+    numTestPts = 30
+    wMat = np.zeros((numTestPts, np.shape(xMat)[1]))
+    for i in range(numTestPts):  # 测试不同的lambda取值，获得系数
+        ws = ridgeTest(xMat, yMat, np.exp(i - 10))
+        wMat[i, :] = ws.T
+    return wMat
+
+    # import data
+
+
+
 def lasso(data):
     pass
+
 
 def read_data(path='./data/exp02/'):
     x = np.load(path + 'X_train.npy')
     y = np.load(path + 'y_train.npy')
     return x, y
+
+
+def main(data):
+    x, y = read_data()
+    weight = ridge(x, y)
+    return weight
+
+
